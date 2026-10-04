@@ -16,7 +16,7 @@ public class Flock : MonoBehaviour
     {
         ApplyRules();
 
-        // Faz o peixe avançar na direção para onde está virado
+        // Avança na direção atual
         transform.Translate(
             Vector3.forward * speed * Time.deltaTime
         );
@@ -43,7 +43,6 @@ public class Flock : MonoBehaviour
                 transform.position
             );
 
-            // Só considera peixes próximos
             if (distance <= FlockManager.FM.neighbourDistance)
             {
                 centre += go.transform.position;
@@ -51,10 +50,11 @@ public class Flock : MonoBehaviour
 
                 groupSize++;
 
-                // Evita que os peixes fiquem em cima uns dos outros
+                // Evitar outros peixes
                 if (distance < 1.0f)
                 {
-                    avoid += transform.position - go.transform.position;
+                    avoid +=
+                        transform.position - go.transform.position;
                 }
 
                 Flock otherFish = go.GetComponent<Flock>();
@@ -66,34 +66,67 @@ public class Flock : MonoBehaviour
             }
         }
 
+        Vector3 direction = transform.forward;
+
         if (groupSize > 0)
         {
-            // Centro médio dos vizinhos
             centre /= groupSize;
-
-            // Direção média dos vizinhos
             alignment /= groupSize;
 
-            // Velocidade média
             speed = groupSpeed / groupSize;
 
-            // COESÃO + SEPARAÇÃO + ALINHAMENTO
-            Vector3 direction =
-                (centre - transform.position)
-                + avoid
-                + alignment;
+            // Coesão
+            direction +=
+                (centre - transform.position) * 0.5f;
 
-            if (direction != Vector3.zero)
-            {
-                Quaternion targetRotation =
-                    Quaternion.LookRotation(direction);
+            // Separação
+            direction += avoid * 1.5f;
 
-                transform.rotation = Quaternion.Slerp(
-                    transform.rotation,
-                    targetRotation,
-                    FlockManager.FM.rotationSpeed * Time.deltaTime
-                );
-            }
+            // Alinhamento
+            direction += alignment * 0.5f;
+        }
+
+        // ----------------------------------
+        // MANTER OS PEIXES NA ZONA
+        // ----------------------------------
+
+        Vector3 managerCentre =
+            FlockManager.FM.transform.position;
+
+        Vector3 limits =
+            FlockManager.FM.swimLimits;
+
+        Vector3 localPosition =
+            transform.position - managerCentre;
+
+        bool outside = false;
+
+        if (Mathf.Abs(localPosition.x) > limits.x)
+            outside = true;
+
+        if (Mathf.Abs(localPosition.y) > limits.y)
+            outside = true;
+
+        if (Mathf.Abs(localPosition.z) > limits.z)
+            outside = true;
+
+        // Se estiver a sair da área, vira para o centro
+        if (outside)
+        {
+            direction =
+                managerCentre - transform.position;
+        }
+
+        if (direction != Vector3.zero)
+        {
+            Quaternion targetRotation =
+                Quaternion.LookRotation(direction);
+
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                targetRotation,
+                FlockManager.FM.rotationSpeed * Time.deltaTime
+            );
         }
     }
 }
