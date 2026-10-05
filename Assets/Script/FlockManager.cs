@@ -11,6 +11,7 @@ public class FlockManager : MonoBehaviour
 
     [Header("Swimming Area")]
     public Vector3 swimLimits = new Vector3(5, 5, 5);
+    public Vector3 goalPos = Vector3.zero;
 
     [Header("Fish Settings")]
     [Range(0.0f, 5.0f)]
@@ -63,6 +64,16 @@ public class FlockManager : MonoBehaviour
             );
 
             Debug.Log("Peixe " + i + " criado em " + pos);
+        }
+        FM = this;
+        goalPos = this.transform.position;
+    }
+
+    private void Update()
+    {
+        if(Random.Range(0,100) < 10)
+        {
+            goalPos = this.transform.position + new Vector3(Random.Range(-swimLimits.x, swimLimits.x), Random.Range(-swimLimits.x, swimLimits.x), Random.Range(-swimLimits.x, swimLimits.x));
         }
     }
 }

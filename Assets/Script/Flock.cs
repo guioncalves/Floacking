@@ -3,17 +3,41 @@ using UnityEngine;
 public class Flock : MonoBehaviour
 {
     float speed;
+    private float randomSpeedMultiplier;
 
     void Start()
     {
+        // Cada peixe começa com uma variação própria
+        randomSpeedMultiplier = Random.Range(0.8f, 1.2f);
+
         speed = Random.Range(
             FlockManager.FM.minSpeed,
             FlockManager.FM.maxSpeed
         );
+
+        speed *= randomSpeedMultiplier;
     }
 
     void Update()
     {
+        // Ocasionalmente escolhe uma nova velocidade
+        if (Random.Range(0, 1000) < 5)
+        {
+            speed = Random.Range(
+                FlockManager.FM.minSpeed,
+                FlockManager.FM.maxSpeed
+            );
+
+            speed *= randomSpeedMultiplier;
+        }
+
+        // Segurança: nunca deixar a velocidade cair demasiado
+        speed = Mathf.Clamp(
+            speed,
+            FlockManager.FM.minSpeed,
+            FlockManager.FM.maxSpeed
+        );
+
         ApplyRules();
 
         // Avança na direção atual
@@ -26,8 +50,8 @@ public class Flock : MonoBehaviour
     {
         GameObject[] gos = FlockManager.FM.allFish;
 
-        Vector3 centre = Vector3.zero;
-        Vector3 avoid = Vector3.zero;
+        Vector3 vcentre = Vector3.zero;
+        Vector3 vavoid = Vector3.zero;
         Vector3 alignment = Vector3.zero;
 
         float groupSpeed = 0f;
@@ -45,15 +69,15 @@ public class Flock : MonoBehaviour
 
             if (distance <= FlockManager.FM.neighbourDistance)
             {
-                centre += go.transform.position;
+                vcentre += go.transform.position;
                 alignment += go.transform.forward;
 
                 groupSize++;
 
-                // Evitar outros peixes
+                // Separação
                 if (distance < 1.0f)
                 {
-                    avoid +=
+                    vavoid +=
                         transform.position - go.transform.position;
                 }
 
@@ -70,20 +94,40 @@ public class Flock : MonoBehaviour
 
         if (groupSize > 0)
         {
-            centre /= groupSize;
+            vcentre /= groupSize;
             alignment /= groupSize;
 
-            speed = groupSpeed / groupSize;
+            // Calcula a velocidade média dos vizinhos
+            float averageGroupSpeed =
+                groupSpeed / groupSize;
+
+            // Aproxima suavemente a velocidade do peixe
+            // da velocidade média do grupo.
+            // NÃO multiplica aleatoriamente a cada frame.
+            speed = Mathf.Lerp(
+                speed,
+                averageGroupSpeed,
+                0.05f
+            );
+
+            // Garante que nunca fica abaixo/acima dos limites
+            speed = Mathf.Clamp(
+                speed,
+                FlockManager.FM.minSpeed,
+                FlockManager.FM.maxSpeed
+            );
 
             // Coesão
             direction +=
-                (centre - transform.position) * 0.5f;
+                (vcentre - transform.position) * 0.5f;
 
             // Separação
-            direction += avoid * 1.5f;
+            direction +=
+                vavoid * 1.5f;
 
             // Alinhamento
-            direction += alignment * 0.5f;
+            direction +=
+                alignment * 0.5f;
         }
 
         // ----------------------------------

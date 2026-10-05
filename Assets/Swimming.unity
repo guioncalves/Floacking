@@ -455,10 +455,11 @@ MonoBehaviour:
   - {fileID: 1318662798089844, guid: 06a4036ceebb544e494c30d599b9d2c1, type: 3}
   - {fileID: 1318662798089844, guid: 06a4036ceebb544e494c30d599b9d2c1, type: 3}
   - {fileID: 1318662798089844, guid: 06a4036ceebb544e494c30d599b9d2c1, type: 3}
-  swimLimits: {x: 2, y: 2, z: 2}
+  swimLimits: {x: 5, y: 2, z: 1}
+  goalPos: {x: 0, y: 0, z: 0}
   minSpeed: 0.24
-  maxSpeed: 3.57
-  neighbourDistance: 4.23
+  maxSpeed: 1.5
+  neighbourDistance: 2
   rotationSpeed: 1.88
 --- !u!1001 &1647246619
 PrefabInstance:
